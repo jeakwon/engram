@@ -43,7 +43,7 @@ def get_args():
 
 def load_config(config_path):
     with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
+        config = yaml.load(f, Loader=yaml.SafeLoader)
     return config
 
 def merge_config_args(args, config):
