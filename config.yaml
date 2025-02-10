@@ -1,3 +1,4 @@
+# config
 model: cifar_resnet18
 pretrained: false
 num_classes: 10
