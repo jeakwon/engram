@@ -1,7 +1,8 @@
 import timm
 import torch
 
-from engram.datasets import load_cifar10, load_cifar100
+from engram import models
+from engram import datasets
 
 import argparse
 
@@ -59,9 +60,9 @@ def get_args():
 def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if args.num_classes == 10:
-        trianloader, testloader = load_cifar10(batch_size=args.batch_size, num_workers=args.num_workers)
+        trianloader, testloader = datasets.load_cifar10(batch_size=args.batch_size, num_workers=args.num_workers)
     elif args.num_classes == 100:
-        trianloader, testloader = load_cifar100(batch_size=args.batch_size, num_workers=args.num_workers)
+        trianloader, testloader = datasets.load_cifar100(batch_size=args.batch_size, num_workers=args.num_workers)
 
     model = model = timm.create_model(args.model, pretrained=args.pretrained, num_classes=args.num_classes).to(device)
     optimizer = timm.optim.create_optimizer_v2(model, opt=args.opt, lr=args.lr)
