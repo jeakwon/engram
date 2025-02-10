@@ -27,7 +27,10 @@ def get_args():
     parser.add_argument('--data-path', type=str, default='./data')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--output', type=str, default='./output')
-
+    
+    # Add the config argument
+    parser.add_argument('--config', type=str, default=None,
+                        help='Path to config file (YAML)')
     # If running in a notebook, parse empty args.
     try:
         get_ipython()
