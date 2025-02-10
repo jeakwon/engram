@@ -1,4 +1,4 @@
-# config
+# python -m engram.train --config engram/config/cifar10_resnet18pt.yaml
 model: cifar_resnet18
 pretrained: true
 num_classes: 10

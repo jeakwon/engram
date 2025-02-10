@@ -1,4 +1,4 @@
-# config
+# python -m engram.train --config engram/config/cifar10_mixer_b16_224.yaml
 model: cifar_mixer_b16_224
 pretrained: false
 num_classes: 10

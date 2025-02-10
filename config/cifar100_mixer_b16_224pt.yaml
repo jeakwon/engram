@@ -1,4 +1,4 @@
-# config
+# python -m engram.train --config engram/config/cifar100_mixer_b16_224pt.yaml
 model: cifar_mixer_b16_224
 pretrained: true
 num_classes: 100

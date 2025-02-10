@@ -1,4 +1,4 @@
-# config
+# python -m engram.train --config engram/config/cifar10_vit_base_patch16_224pt.yaml
 model: cifar_vit_base_patch16_224
 pretrained: true
 num_classes: 10
