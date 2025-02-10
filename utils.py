@@ -1,4 +1,12 @@
+import timm
 import torch
+
+def train():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = timm.create_model(args.model, pretrained=args.use_pt, num_classes=args.num_classes)
+    
+
+
 
 def train_epoch(device, model, trainloader, criterion, optimizer, mixup_fn):
     model.train()
