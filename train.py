@@ -47,9 +47,7 @@ def load_config(config_path):
     return config
 
 def merge_config_args(args, config):
-    # config는 딕셔너리, args는 Namespace
     for key, value in config.items():
-        # argparse 인자에 이미 값이 있는 경우 기본값을 config 파일의 값으로 업데이트.
         setattr(args, key, value)
     return args
 
