@@ -63,7 +63,7 @@ def train(args):
     elif args.num_classes == 100:
         trianloader, testloader = load_cifar100(batch_size=args.batch_size, num_workers=args.num_workers)
 
-    model = cifar_resnet18(num_classes=args.num_classes, pretrained=args.pretrained).to('cuda')
+    model = model = timm.create_model(args.model, pretrained=args.pretrained, num_classes=args.num_classes).to(device)
     optimizer = timm.optim.create_optimizer_v2(model, opt=args.opt, lr=args.lr)
     scheduler, _ = timm.scheduler.create_scheduler_v2(optimizer, sched=args.sched)
     criterion = torch.nn.CrossEntropyLoss()
@@ -79,8 +79,8 @@ def train(args):
     )
 
     for epoch in range(args.num_epochs):
-        train_loss, train_acc = train_epoch('cuda', model, trianloader, criterion, optimizer, mixup_fn)
-        test_loss, test_acc = test_epoch('cuda', model, testloader, criterion)
+        train_loss, train_acc = train_epoch(device, model, trianloader, criterion, optimizer, mixup_fn)
+        test_loss, test_acc = test_epoch(device, model, testloader, criterion)
         print(f"Epoch [{epoch+1:3}/{args.num_epochs}] | "
               f"Loss: {train_loss:.4f}/{test_loss:.4f} | "
               f"Acc: {train_acc:5.2f}/{test_acc:5.2f}% ")
