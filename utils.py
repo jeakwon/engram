@@ -8,8 +8,20 @@ from timm.scheduler import create_scheduler_v2
 from . import models
 from . import datasets
 
+import os
+import random
+import numpy as np
+import torch
 
 def train(args):
+
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(args.seed)
+        torch.cuda.manual_seed_all(args.seed)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if args.num_classes == 10:
         trianloader, testloader = datasets.load_cifar10(batch_size=args.batch_size, num_workers=args.num_workers)
