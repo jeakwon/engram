@@ -56,4 +56,8 @@ if __name__ == '__main__':
     if args.config:
         config = load_config(args.config)
         args = merge_config_args(args, config)
+
+    for key, value in sorted(vars(args).items()):
+        print(f"  {key}: {value}")
+
     train(args)
