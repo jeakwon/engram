@@ -24,6 +24,7 @@ def get_args():
 
     # Data and general training settings
     parser.add_argument('--batch-size', type=int, default=100)
+    parser.add_argument('--num-workers', type=int, default=2)
     parser.add_argument('--data-path', type=str, default='./data')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--output', type=str, default='./output')
