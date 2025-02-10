@@ -2,7 +2,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
-def load_cifar10(batch_size=1000, num_workers=2):
+def load_cifar10(batch_size=100, num_workers=2):
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),

@@ -1,6 +1,6 @@
 import torch
 
-def train_epoch(device, model, trainloader, criterion, optimizer, scheduler, mixup_fn):
+def train_epoch(device, model, trainloader, criterion, optimizer, mixup_fn):
     model.train()
     running_loss, correct, total = 0.0, 0, 0
 
@@ -21,8 +21,6 @@ def train_epoch(device, model, trainloader, criterion, optimizer, scheduler, mix
         _, predicted = outputs.max(1)
         total += labels.size(0)
         correct += predicted.eq(labels.argmax(dim=1)).sum().item()
-
-    scheduler.step()
 
     running_loss /= len(trainloader)
     accuracy = 100 * correct / total
