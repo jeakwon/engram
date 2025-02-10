@@ -1,6 +1,6 @@
 import timm
 import torch.nn as nn
-from timm.models.registry import register_model
+from timm.models import register_model
 
 @register_model
 def cifar_resnet18(pretrained, num_classes, **kwargs):
