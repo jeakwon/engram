@@ -5,8 +5,8 @@ from timm import create_model
 from timm.optim import create_optimizer_v2
 from timm.scheduler import create_scheduler_v2
 
-from engram import models
-from engram import datasets
+from . import models
+from . import datasets
 
 
 def train(args):
