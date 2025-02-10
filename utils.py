@@ -8,58 +8,6 @@ from timm.scheduler import create_scheduler_v2
 from engram import models
 from engram import datasets
 
-import argparse
-
-def get_args():
-    parser = argparse.ArgumentParser(description="Training with TIMM")
-
-    # Model settings
-    parser.add_argument('--model', type=str, default='cifar_resnet18', 
-                        help='Model architecture to use (e.g., cifar_resnet18, cifar_vit_base_patch16_224, cifar_mixer_b16_224)')
-    parser.add_argument('--pretrained', action='store_true', 
-                        help='Load pretrained weights')
-    parser.add_argument('--num-classes', type=int, default=10, 
-                        help='Number of classes in the dataset')
-
-    # Optimizer settings
-    parser.add_argument('--opt', type=str, default='lion', 
-                        help='Optimizer to use (e.g., adamw, lion)')
-    parser.add_argument('--lr', type=float, default=1e-5, 
-                        help='Base learning rate')
-
-    # Scheduler settings
-    parser.add_argument('--sched', type=str, default='cosine', 
-                        help='Learning rate scheduler type (e.g., cosine)')
-    parser.add_argument('--epochs', type=int, default=300, 
-                        help='Total number of training epochs')
-    parser.add_argument('--lr-min', type=float, default=1e-5, 
-                        help='Minimum learning rate')
-    parser.add_argument('--warmup-lr', type=float, default=1e-5, 
-                        help='Warmup learning rate')
-    parser.add_argument('--warmup-epochs', type=int, default=30, 
-                        help='Number of warmup epochs')
-    parser.add_argument('--t-in-epochs', action='store_true', 
-                        help='Schedule time unit is in epochs (if not, then in steps)')
-
-    # Data and general training settings
-    parser.add_argument('--batch-size', type=int, default=100, 
-                        help='Batch size for training')
-    parser.add_argument('--num-workers', type=int, default=2, 
-                        help='Batch size for training')
-    parser.add_argument('--data-path', type=str, default='./data', 
-                        help='Path to the dataset')
-    parser.add_argument('--seed', type=int, default=42, 
-                        help='Random seed')
-    parser.add_argument('--output', type=str, default='./output', 
-                        help='Output directory for checkpoints and logs')
-
-    try:
-        get_ipython()  # Check for IPython environment
-        args = parser.parse_args([]) # Pass an empty list when in a notebook
-    except NameError:
-        args = parser.parse_args()  # Parse command-line arguments otherwise
-
-    return args
 
 def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
