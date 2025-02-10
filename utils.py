@@ -1,5 +1,9 @@
-import timm
 import torch
+import timm
+
+from timm import create_model
+from timm.optim import create_optimizer_v2
+from timm.scheduler import create_scheduler_v2
 
 from engram import models
 from engram import datasets
@@ -64,9 +68,9 @@ def train(args):
     elif args.num_classes == 100:
         trianloader, testloader = datasets.load_cifar100(batch_size=args.batch_size, num_workers=args.num_workers)
 
-    model = model = timm.create_model(args.model, pretrained=args.pretrained, num_classes=args.num_classes).to(device)
-    optimizer = timm.optim.create_optimizer_v2(model, opt=args.opt, lr=args.lr)
-    scheduler, _ = timm.scheduler.create_scheduler_v2(optimizer, sched=args.sched)
+    model = model = create_model(args.model, pretrained=args.pretrained, num_classes=args.num_classes).to(device)
+    optimizer = create_optimizer_v2(model, opt=args.opt, lr=args.lr)
+    scheduler, _ = create_scheduler_v2(optimizer, sched=args.sched)
     criterion = torch.nn.CrossEntropyLoss()
 
     mixup_fn = timm.data.Mixup(
