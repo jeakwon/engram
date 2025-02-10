@@ -1,6 +1,8 @@
 import timm
 import torch
 
+from engram.datasets import load_cifar10, load_cifar100
+
 import argparse
 
 def get_args():
