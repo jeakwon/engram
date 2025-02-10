@@ -1,6 +1,6 @@
 import yaml
 import argparse
-from engram.utils import train
+from .utils import train
 
 def get_args():
     parser = argparse.ArgumentParser(description="Training with TIMM")
