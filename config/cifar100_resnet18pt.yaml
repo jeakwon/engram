@@ -1,0 +1,16 @@
+# config
+model: cifar_resnet18
+pretrained: true
+num_classes: 100
+opt: lion
+lr: 0.00001
+sched: cosine
+epochs: 300
+lr_min: 0
+warmup_lr: 0.00001
+warmup_epochs: 30
+t_in_epochs: true
+batch_size: 100
+data_path: './data'
+seed: 42
+output: './result/cifar100_resnet18pt'
