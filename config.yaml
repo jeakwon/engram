@@ -3,11 +3,11 @@ model: cifar_resnet18
 pretrained: false
 num_classes: 10
 opt: lion
-lr: 1e-5
+lr: 0.00001
 sched: cosine
 epochs: 300
-lr_min: 1e-5
-warmup_lr: 1e-5
+lr_min: 0
+warmup_lr: 0.00001
 warmup_epochs: 30
 t_in_epochs: true
 batch_size: 100
