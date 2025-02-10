@@ -42,9 +42,8 @@ def get_args():
     return args
 
 def load_config(config_path):
-    with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
-    print("lr value:", config.get("lr"), "Type:", type(config.get("lr")))
+    with open(config_path, 'r', encoding='utf-8') as f:
+        config = yaml.load(f, Loader=yaml.SafeLoader)
     return config
 
 def merge_config_args(args, config):
