@@ -31,7 +31,6 @@ def train_epoch(device, model, trainloader, criterion, optimizer, scheduler, mix
 
 @torch.no_grad()
 def test_epoch(device, model, testloader, criterion):
-    start_time = time.time()
     model.eval()
     running_loss, correct, total = 0.0, 0, 0
     for inputs, labels in testloader:
@@ -46,5 +45,4 @@ def test_epoch(device, model, testloader, criterion):
         correct += predicted.eq(labels).sum().item()
     running_loss /= len(testloader)
     accuracy = 100 * correct / total
-    duration = time.time() - start_time
-    return running_loss, accuracy, duration
+    return running_loss, accuracy
