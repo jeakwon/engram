@@ -83,10 +83,10 @@ def train(args):
         num_classes=args.num_classes
     )
 
-    for epoch in range(args.num_epochs):
+    for epoch in range(args.epochs):
         train_loss, train_acc = train_epoch(device, model, trianloader, criterion, optimizer, mixup_fn)
         test_loss, test_acc = test_epoch(device, model, testloader, criterion)
-        print(f"Epoch [{epoch+1:3}/{args.num_epochs}] | "
+        print(f"Epoch [{epoch+1:3}/{args.epochs}] | "
               f"Loss: {train_loss:.4f}/{test_loss:.4f} | "
               f"Acc: {train_acc:5.2f}/{test_acc:5.2f}% ")
         scheduler.step(epoch)
