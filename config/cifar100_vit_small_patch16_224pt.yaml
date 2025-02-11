@@ -1,5 +1,5 @@
-# python -m engram.train --config engram/config/cifar100_vit_base_patch16_224pt.yaml
-model: cifar_vit_base_patch16_224
+# python -m engram.train --config engram/config/cifar100_vit_small_patch16_224pt.yaml
+model: cifar_vit_small_patch16_224
 pretrained: true
 num_classes: 100
 opt: lion
@@ -13,4 +13,4 @@ t_in_epochs: true
 batch_size: 100
 data_path: './data'
 seed: 42
-output: './result/cifar100_vit_base_patch16_224pt'
+output: './result/cifar100_vit_small_patch16_224pt'
