@@ -13,7 +13,7 @@ import random
 import numpy as np
 import torch
 
-# from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 def train(args):
     random.seed(args.seed)
@@ -59,10 +59,10 @@ def train(args):
         test_loss, test_acc = test_epoch(device, model, testloader, criterion)
         print(f"Epoch [{epoch+1:3}/{args.epochs}] | Loss: {train_loss:.4f}/{test_loss:.4f} | Acc: {train_acc:5.2f}/{test_acc:5.2f}% ")
 
-        # writer.add_scalar('Loss/Train', train_loss, epoch)
-        # writer.add_scalar('Loss/Test', test_loss, epoch)
-        # writer.add_scalar('Accuracy/Train', train_acc, epoch)
-        # writer.add_scalar('Accuracy/Test', test_acc, epoch)
+        writer.add_scalar('Loss/Train', train_loss, epoch)
+        writer.add_scalar('Loss/Test', test_loss, epoch)
+        writer.add_scalar('Accuracy/Train', train_acc, epoch)
+        writer.add_scalar('Accuracy/Test', test_acc, epoch)
 
         checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint.pth")
         torch.save({
@@ -84,7 +84,7 @@ def train(args):
 
         scheduler.step(epoch)
 
-    # writer.close()
+    writer.close()
 
 
 def train_epoch(device, model, trainloader, criterion, optimizer, mixup_fn):
