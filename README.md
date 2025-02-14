@@ -1,5 +1,6 @@
 ```
 git clone https://github.com/jeakwon/engram.git -q
-pip install -e engram -q
-python -m engram.train --config engram/config/cifar10_resnet18pt.yaml
+cd engram
+pip install . engram -q
+python -m engram.finetuning.train --config engram/finetuning/config/sgd/cifar10_vit_small_patch16_224pt.yaml
 ```

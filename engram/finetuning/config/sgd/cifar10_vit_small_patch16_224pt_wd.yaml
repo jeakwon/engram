@@ -1,4 +1,4 @@
-# python -m engram.train --config engram/finetuning/config/sgd/cifar10_vit_small_patch16_224pt_wd.yaml
+# python -m engram.finetuning.train --config engram/finetuning/config/sgd/cifar10_vit_small_patch16_224pt_wd.yaml
 model: cifar_vit_small_patch16_224
 pretrained: true
 num_classes: 10
