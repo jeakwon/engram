@@ -5,8 +5,8 @@ from timm import create_model
 from timm.optim import create_optimizer_v2
 from timm.scheduler import create_scheduler_v2
 
-from . import models
-from . import datasets
+from engram import models
+from engram import datasets
 
 import os
 import random
@@ -14,6 +14,7 @@ import numpy as np
 import torch
 
 from torch.utils.tensorboard import SummaryWriter
+
 
 def train(args):
     random.seed(args.seed)
@@ -25,14 +26,22 @@ def train(args):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if args.num_classes == 10:
-        trainloader, testloader = datasets.load_cifar10(batch_size=args.batch_size, num_workers=args.num_workers)
+        trainloader, testloader = datasets.load_cifar10(
+            batch_size=args.batch_size, num_workers=args.num_workers
+        )
     elif args.num_classes == 100:
-        trainloader, testloader = datasets.load_cifar100(batch_size=args.batch_size, num_workers=args.num_workers)
+        trainloader, testloader = datasets.load_cifar100(
+            batch_size=args.batch_size, num_workers=args.num_workers
+        )
     else:
         raise ValueError("not supported")
 
-    model = create_model(args.model, pretrained=args.pretrained, num_classes=args.num_classes).to(device)
-    optimizer = create_optimizer_v2(model, opt=args.opt, lr=args.lr)
+    model = create_model(
+        args.model, pretrained=args.pretrained, num_classes=args.num_classes
+    ).to(device)
+    optimizer = create_optimizer_v2(
+        model, opt=args.opt, lr=args.lr, weight_decay=args.weight_decay
+    )
     scheduler, _ = create_scheduler_v2(optimizer, sched=args.sched)
     criterion = torch.nn.CrossEntropyLoss()
 
@@ -41,9 +50,9 @@ def train(args):
         cutmix_alpha=1.0,
         prob=1.0,
         switch_prob=0.5,
-        mode='batch',
+        mode="batch",
         label_smoothing=0.1,
-        num_classes=args.num_classes
+        num_classes=args.num_classes,
     )
 
     log_dir = os.path.join(args.output, "logs")
@@ -55,27 +64,34 @@ def train(args):
     best_acc = 0.0
 
     for epoch in range(args.epochs):
-        train_loss, train_acc = train_epoch(device, model, trainloader, criterion, optimizer, mixup_fn)
+        train_loss, train_acc = train_epoch(
+            device, model, trainloader, criterion, optimizer, mixup_fn
+        )
         test_loss, test_acc = test_epoch(device, model, testloader, criterion)
-        print(f"Epoch [{epoch+1:3}/{args.epochs}] | Loss: {train_loss:.4f}/{test_loss:.4f} | Acc: {train_acc:5.2f}/{test_acc:5.2f}% ")
+        print(
+            f"Epoch [{epoch+1:3}/{args.epochs}] | Loss: {train_loss:.4f}/{test_loss:.4f} | Acc: {train_acc:5.2f}/{test_acc:5.2f}% "
+        )
 
-        writer.add_scalar('Loss/Train', train_loss, epoch)
-        writer.add_scalar('Loss/Test', test_loss, epoch)
-        writer.add_scalar('Accuracy/Train', train_acc, epoch)
-        writer.add_scalar('Accuracy/Test', test_acc, epoch)
+        writer.add_scalar("Loss/Train", train_loss, epoch)
+        writer.add_scalar("Loss/Test", test_loss, epoch)
+        writer.add_scalar("Accuracy/Train", train_acc, epoch)
+        writer.add_scalar("Accuracy/Test", test_acc, epoch)
 
         checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint.pth")
-        torch.save({
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'scheduler_state_dict': scheduler.state_dict(),
-            'train_loss': train_loss,
-            'test_loss': test_loss,
-            'train_acc': train_acc,
-            'test_acc': test_acc,
-            'args': vars(args),
-        }, checkpoint_path)
+        torch.save(
+            {
+                "epoch": epoch,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "scheduler_state_dict": scheduler.state_dict(),
+                "train_loss": train_loss,
+                "test_loss": test_loss,
+                "train_acc": train_acc,
+                "test_acc": test_acc,
+                "args": vars(args),
+            },
+            checkpoint_path,
+        )
 
         if test_acc > best_acc:
             best_acc = test_acc
