@@ -75,6 +75,8 @@ def load_cifar10(
         )
         test_set.data = test_set.data[test_set.targets != class_to_replace]
         test_set.targets = test_set.targets[test_set.targets != class_to_replace]
+        valid_set.data = valid_set.data[valid_set.targets != class_to_replace]
+        valid_set.targets = valid_set.targets[valid_set.targets != class_to_replace]
 
     loader_args = {"num_workers": 2, "pin_memory": False}
 
@@ -177,6 +179,8 @@ def load_cifar100(
         )
         test_set.data = test_set.data[test_set.targets != class_to_replace]
         test_set.targets = test_set.targets[test_set.targets != class_to_replace]
+        valid_set.data = valid_set.data[valid_set.targets != class_to_replace]
+        valid_set.targets = valid_set.targets[valid_set.targets != class_to_replace]
 
     loader_args = {"num_workers": 2, "pin_memory": False}
 
@@ -213,26 +217,14 @@ def replace_class(
     dataset: torch.utils.data.Dataset,
     class_to_replace: int,
 ):
-    # if class_to_replace == -1:
-    if -1 in class_to_replace:
+    try:
+        # indexes = np.flatnonzero(np.array(dataset.targets) == class_to_replace)
+        indexes = np.flatnonzero(np.isin(np.array(dataset.targets), class_to_replace))
+    except:
         try:
-            indexes = np.flatnonzero(np.ones_like(dataset.targets))
+            indexes = np.flatnonzero(np.array(dataset.labels) == class_to_replace)
         except:
-            try:
-                indexes = np.flatnonzero(np.ones_like(dataset.labels))
-            except:
-                indexes = np.flatnonzero(np.ones_like(dataset._labels))
-    else:
-        try:
-            # indexes = np.flatnonzero(np.array(dataset.targets) == class_to_replace)
-            indexes = np.flatnonzero(
-                np.isin(np.array(dataset.targets), class_to_replace)
-            )
-        except:
-            try:
-                indexes = np.flatnonzero(np.array(dataset.labels) == class_to_replace)
-            except:
-                indexes = np.flatnonzero(np.array(dataset._labels) == class_to_replace)
+            indexes = np.flatnonzero(np.array(dataset._labels) == class_to_replace)
 
     # Notice the -1 to make class 0 work
     try:
