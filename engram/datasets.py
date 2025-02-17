@@ -16,9 +16,6 @@ def load_cifar10(
         [
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
-            transforms.AutoAugment(
-                policy=transforms.autoaugment.AutoAugmentPolicy.CIFAR10
-            ),
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize(
@@ -119,9 +116,6 @@ def load_cifar100(
         [
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
-            transforms.AutoAugment(
-                policy=transforms.autoaugment.AutoAugmentPolicy.CIFAR10
-            ),
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize(
