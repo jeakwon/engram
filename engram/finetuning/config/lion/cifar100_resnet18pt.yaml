@@ -1,4 +1,4 @@
-# python -m engram.train --config engram/config/cifar100_resnet18pt.yaml
+# python -m engram.train.finetuning --config engram/finetuning/config/lion/cifar100_resnet18pt.yaml
 model: cifar_resnet18
 pretrained: true
 num_classes: 100

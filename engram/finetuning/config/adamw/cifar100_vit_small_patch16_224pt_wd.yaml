@@ -1,0 +1,19 @@
+# python -m engram.finetuning.finetune_trainer --config engram/finetuning/config/adamw/cifar100_vit_small_patch16_224pt_wd.yaml
+model: cifar_vit_small_patch16_224
+pretrained: true
+dataset: cifar100
+opt: adamw
+lr: 0.0001
+weight_decay: 0.01
+mixup: false
+sched: cosine
+epochs: 20
+lr_min: 0
+warmup_lr: 0.00001
+warmup_epochs: 5
+t_in_epochs: true
+batch_size: 100
+data_path: './data'
+seed: 42
+wandb: true
+output: './result/finetuning/cifar100_vit_small_patch16_224pt_adamw_wd'
