@@ -12,7 +12,7 @@ def get_args():
     parser.add_argument("--num-classes", type=int, default=10)
 
     # Optimizer settings
-    parser.add_argument("--opt", type=str, default="lion")
+    parser.add_argument("--opt", type=str, default="sgd")
     parser.add_argument("--lr", type=float, default=1e-5)
     parser.add_argument("--weight_decay", type=float, default=0)
 
