@@ -1,8 +1,6 @@
 import yaml
 import argparse
-from engram.unlearning import retrain
-
-# from engram.unlearning import unlearn
+from engram.unlearning import retrain, unlearn
 
 
 def parse_classes(s):
@@ -22,7 +20,6 @@ def get_args():
 
     # Model settings
     parser.add_argument("--model", type=str, default="cifar_resnet18")
-    parser.add_argument("--model_load_path", type=str, default=None)
     parser.add_argument("--imagenet_arch", action="store_true")
     parser.add_argument(
         "--pretrained",
@@ -39,6 +36,8 @@ def get_args():
     # Optimizer settings
     parser.add_argument("--opt", type=str, default="sgd")
     parser.add_argument("--lr", type=float, default=1e-5)
+    parser.add_argument("--unlearn_lr", type=float, default=1e-5)
+    parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight_decay", type=float, default=0)
 
     # Unlearning hyperparameters
@@ -47,7 +46,9 @@ def get_args():
     # Scheduler settings
     parser.add_argument("--sched", type=str, default="cosine")
     parser.add_argument("--epochs", type=int, default=300)
+    parser.add_argument("--unlearn_epochs", type=int, default=5)
     parser.add_argument("--lr-min", type=float, default=1e-5)
+    parser.add_argument("--warmup", type=int, default=0)
     parser.add_argument("--warmup-lr", type=float, default=1e-5)
     parser.add_argument("--warmup-epochs", type=int, default=30)
     parser.add_argument("--t-in-epochs", action="store_true")
@@ -102,5 +103,5 @@ if __name__ == "__main__":
 
     if args.unlearn == "retrain":
         retrain.train(args)
-    # else:
-    #     unlearn.train(args)
+    else:
+        unlearn.train(args)

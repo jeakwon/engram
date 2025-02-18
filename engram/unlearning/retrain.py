@@ -24,7 +24,6 @@ from engram.unlearning.evaluation import SVC_MIA
 import os
 import torch
 import wandb
-import json
 
 
 def train(args):
@@ -125,7 +124,6 @@ def train(args):
             )
 
         scheduler.step(epoch)
-        break
 
     end_rte = time.time()
     print(f"Overall time (unlearning & preparation): {end_rte - start_rte:.3f}s")

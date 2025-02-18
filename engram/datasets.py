@@ -7,11 +7,7 @@ import numpy as np
 import copy
 
 
-def load_cifar10(
-    batch_size=100,
-    seed=1,
-    class_to_replace=None,
-):
+def load_cifar10(batch_size=100, seed=1, class_to_replace=None, data_dir="./data"):
     transform_train = transforms.Compose(
         [
             transforms.RandomCrop(32, padding=4),
@@ -34,7 +30,6 @@ def load_cifar10(
         ]
     )
 
-    data_dir = "./data"
     train_set = CIFAR10(data_dir, train=True, transform=transform_train, download=False)
     print("Total train set size:", len(train_set))
     test_set = CIFAR10(data_dir, train=False, transform=transform_test, download=False)
@@ -106,11 +101,7 @@ def load_cifar10(
     return train_loader, val_loader, test_loader
 
 
-def load_cifar100(
-    batch_size=1000,
-    seed=1,
-    class_to_replace=None,
-):
+def load_cifar100(batch_size=100, seed=1, class_to_replace=None, data_dir="./data"):
     transform_train = transforms.Compose(
         [
             transforms.RandomCrop(32, padding=4),
@@ -133,7 +124,6 @@ def load_cifar100(
         ]
     )
 
-    data_dir = "./data"
     train_set = CIFAR100(
         data_dir, train=True, transform=transform_train, download=False
     )
