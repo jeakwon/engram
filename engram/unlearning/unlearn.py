@@ -145,7 +145,7 @@ def train(args):
         dataset_convert_to_test(test_loader, test_loader.dataset)
         shadow_train = Subset(retain_loader.dataset, list(range(test_len)))
         shadow_train_loader = DataLoader(
-            shadow_train, batch_size=args.batch_size, shuffle=False
+            shadow_train, batch_size=args.batch_size, shuffle=False, num_workers=2
         )
         evaluation_result["SVC_MIA_forget_efficacy"] = SVC_MIA(
             shadow_train=shadow_train_loader,
@@ -169,39 +169,67 @@ def train(args):
 
     # Train linear classifier with simple Adam optimizer
     lp_optimizer = torch.optim.Adam(model.head.parameters(), lr=1e-4)
-    best_val_acc = 0
-    best_retain_acc = 0
-    best_forget_acc = 0
 
     # Train for 3 epochs
+    print("Train")
     for epoch in range(3):
-        train_loss, train_acc = train_epoch(
+        _, _ = train_epoch(
             args, device, model, train_loader_full, criterion, lp_optimizer
         )
-        _, val_acc = test_epoch(device, model, val_loader, criterion)
 
-        # Track best accuracy
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            _, retain_acc = test_epoch(device, model, retain_loader, criterion)
-            _, forget_acc = test_epoch(device, model, forget_loader, criterion)
-            best_retain_acc = retain_acc
-            best_forget_acc = forget_acc
+    # Evaluate on training sets
+    print("Eval")
+    _, retain_acc = test_epoch(device, model, retain_loader, criterion)
+    _, forget_acc = test_epoch(device, model, forget_loader, criterion)
+
+    # Evaluate on test set's retain and forget classes
+    targets = (
+        test_loader.dataset.targets
+        if hasattr(test_loader.dataset, "targets")
+        else test_loader.dataset.tensors[1]
+    )
+    retain_indices = [
+        i for i, label in enumerate(targets) if label not in args.class_to_replace
+    ]
+    forget_indices = [
+        i for i, label in enumerate(targets) if label in args.class_to_replace
+    ]
+
+    test_retain_dataset = Subset(test_loader.dataset, retain_indices)
+    test_forget_dataset = Subset(test_loader.dataset, forget_indices)
+
+    test_retain_loader = DataLoader(
+        test_retain_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2
+    )
+    test_forget_loader = DataLoader(
+        test_forget_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2
+    )
+
+    print("test")
+    _, test_retain_acc = test_epoch(device, model, test_retain_loader, criterion)
+    _, test_forget_acc = test_epoch(device, model, test_forget_loader, criterion)
 
     print(
-        f"Linear Probing - Best Retain acc: {best_retain_acc:.2f}%, Best Forget acc: {best_forget_acc:.2f}%"
+        f"Linear Probing Results:\n"
+        f"Train - Retain acc: {retain_acc:.2f}%, Forget acc: {forget_acc:.2f}%\n"
+        f"Test  - Retain acc: {test_retain_acc:.2f}%, Forget acc: {test_forget_acc:.2f}%"
     )
+
     if args.wandb:
         logger.log(
             {
-                "LP retain acc": best_retain_acc,
-                "LP forget acc": best_forget_acc,
+                "LP train retain acc": retain_acc,
+                "LP train forget acc": forget_acc,
+                "LP test retain acc": test_retain_acc,
+                "LP test forget acc": test_forget_acc,
             }
         )
 
     evaluation_result["LP accuracy"] = {
-        "LP retain acc": best_retain_acc,
-        "LP forget acc": best_forget_acc,
+        "LP train retain acc": retain_acc,
+        "LP train forget acc": forget_acc,
+        "LP test retain acc": test_retain_acc,
+        "LP test forget acc": test_forget_acc,
     }
 
     if not args.no_save:

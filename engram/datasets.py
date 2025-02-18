@@ -67,8 +67,6 @@ def load_cifar10(batch_size=100, seed=1, class_to_replace=None, data_dir="./data
             train_set,
             class_to_replace,
         )
-        test_set.data = test_set.data[test_set.targets != class_to_replace]
-        test_set.targets = test_set.targets[test_set.targets != class_to_replace]
 
     loader_args = {"num_workers": 2, "pin_memory": False}
 
@@ -163,8 +161,6 @@ def load_cifar100(batch_size=100, seed=1, class_to_replace=None, data_dir="./dat
             train_set,
             class_to_replace,
         )
-        test_set.data = test_set.data[test_set.targets != class_to_replace]
-        test_set.targets = test_set.targets[test_set.targets != class_to_replace]
 
     loader_args = {"num_workers": 2, "pin_memory": False}
 
