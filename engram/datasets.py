@@ -34,14 +34,11 @@ def load_cifar10(
         ]
     )
 
-    print(
-        "Dataset information: CIFAR-10\t 45000 images for training \t 5000 images for validation\t"
-    )
-    print("10000 images for testing")
-
     data_dir = "./data"
     train_set = CIFAR10(data_dir, train=True, transform=transform_train, download=False)
+    print("Total train set size:", len(train_set))
     test_set = CIFAR10(data_dir, train=False, transform=transform_test, download=False)
+    print("Total test set size:", len(test_set))
 
     train_set.targets = np.array(train_set.targets)
     test_set.targets = np.array(test_set.targets)
@@ -62,11 +59,13 @@ def load_cifar10(
     valid_set.data = train_set_copy.data[valid_idx]
     valid_set.targets = train_set_copy.targets[valid_idx]
     valid_set.transform = transform_test
+    print("Validation set size:", len(valid_set))
 
     train_idx = list(set(range(len(train_set))) - set(valid_idx))
 
     train_set.data = train_set_copy.data[train_idx]
     train_set.targets = train_set_copy.targets[train_idx]
+    print("Train set size:", len(train_set))
 
     if class_to_replace is not None:
         replace_class(
@@ -75,8 +74,6 @@ def load_cifar10(
         )
         test_set.data = test_set.data[test_set.targets != class_to_replace]
         test_set.targets = test_set.targets[test_set.targets != class_to_replace]
-        valid_set.data = valid_set.data[valid_set.targets != class_to_replace]
-        valid_set.targets = valid_set.targets[valid_set.targets != class_to_replace]
 
     loader_args = {"num_workers": 2, "pin_memory": False}
 
@@ -136,16 +133,13 @@ def load_cifar100(
         ]
     )
 
-    print(
-        "Dataset information: CIFAR-100\t 45000 images for training \t 500 images for validation\t"
-    )
-    print("10000 images for testing")
-
     data_dir = "./data"
     train_set = CIFAR100(
         data_dir, train=True, transform=transform_train, download=False
     )
+    print("Total train set size:", len(train_set))
     test_set = CIFAR100(data_dir, train=False, transform=transform_test, download=False)
+    print("Total test set size:", len(test_set))
 
     train_set.targets = np.array(train_set.targets)
     test_set.targets = np.array(test_set.targets)
@@ -154,7 +148,7 @@ def load_cifar100(
     valid_set = copy.deepcopy(train_set)
     valid_idx = []
 
-    for i in range(10):
+    for i in range(max(train_set.targets) + 1):
         class_idx = np.where(train_set.targets == i)[0]
         valid_idx.append(
             rng.choice(class_idx, int(0.1 * len(class_idx)), replace=False)
@@ -166,11 +160,13 @@ def load_cifar100(
     valid_set.data = train_set_copy.data[valid_idx]
     valid_set.targets = train_set_copy.targets[valid_idx]
     valid_set.transform = transform_test
+    print("Validation set size:", len(valid_set))
 
     train_idx = list(set(range(len(train_set))) - set(valid_idx))
 
     train_set.data = train_set_copy.data[train_idx]
     train_set.targets = train_set_copy.targets[train_idx]
+    print("Train set size:", len(train_set))
 
     if class_to_replace is not None:
         replace_class(
@@ -179,8 +175,6 @@ def load_cifar100(
         )
         test_set.data = test_set.data[test_set.targets != class_to_replace]
         test_set.targets = test_set.targets[test_set.targets != class_to_replace]
-        valid_set.data = valid_set.data[valid_set.targets != class_to_replace]
-        valid_set.targets = valid_set.targets[valid_set.targets != class_to_replace]
 
     loader_args = {"num_workers": 2, "pin_memory": False}
 

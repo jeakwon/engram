@@ -1,3 +1,7 @@
+import time
+from collections import OrderedDict
+from torch.utils.data import DataLoader, Subset
+
 import torch
 import timm
 
@@ -7,81 +11,69 @@ from timm.scheduler import create_scheduler_v2
 
 from engram import models
 from engram import datasets
-from engram.misc import set_seed, save_checkpoint
+from engram.misc import (
+    set_seed,
+    save_checkpoint,
+    dataset_convert_to_test,
+    split_dataset_loader,
+    save_unlearn_checkpoint,
+    save_evals,
+)
+from engram.unlearning.evaluation import SVC_MIA
 
 import os
-import random
-import copy
-import numpy as np
 import torch
 import wandb
+import json
 
 
 def train(args):
+    start_rte = time.time()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     set_seed(args.seed)
-    class_to_replace = args.class_to_replace
+
     if args.dataset == "cifar10":
-        trainloader, valloader, testloader = datasets.load_cifar10(
+        train_loader_full, val_loader, _ = datasets.load_cifar10(
             batch_size=args.batch_size,
             seed=args.seed,
-            class_to_replace=class_to_replace,
+        )
+        marked_loader, _, test_loader = datasets.load_cifar10(
+            batch_size=args.batch_size,
+            seed=args.seed,
+            class_to_replace=args.class_to_replace,
         )
         args.num_classes = 10
     elif args.dataset == "cifar100":
-        trainloader, valloader, testloader = datasets.load_cifar100(
+        train_loader_full, val_loader, _ = datasets.load_cifar100(
             batch_size=args.batch_size,
             seed=args.seed,
-            class_to_replace=class_to_replace,
+        )
+        marked_loader, _, test_loader = datasets.load_cifar100(
+            batch_size=args.batch_size,
+            seed=args.seed,
+            class_to_replace=args.class_to_replace,
         )
         args.num_classes = 100
     else:
         raise ValueError("not supported")
 
-    def replace_loader_dataset(
-        dataset, batch_size=args.batch_size, seed=1, shuffle=True
-    ):
-        set_seed(seed)
-        return torch.utils.data.DataLoader(
-            dataset,
-            batch_size=batch_size,
-            num_workers=0,
-            pin_memory=True,
-            shuffle=shuffle,
-        )
-
-    forget_dataset = copy.deepcopy(trainloader.dataset)
-    try:
-        marked = forget_dataset.targets < 0
-    except:
-        marked = forget_dataset.labels < 0
-    forget_dataset.data = forget_dataset.data[marked]
-    try:
-        forget_dataset.targets = -forget_dataset.targets[marked] - 1
-    except:
-        forget_dataset.labels = -forget_dataset.labels[marked] - 1
-    forget_loader = replace_loader_dataset(forget_dataset, seed=args.seed, shuffle=True)
-    print(len(forget_dataset))
-    retain_dataset = copy.deepcopy(trainloader.dataset)
-    try:
-        marked = retain_dataset.targets >= 0
-    except:
-        marked = retain_dataset.labels >= 0
-    retain_dataset.data = retain_dataset.data[marked]
-    try:
-        retain_dataset.targets = retain_dataset.targets[marked]
-    except:
-        retain_dataset.labels = retain_dataset.labels[marked]
-    retain_loader = replace_loader_dataset(retain_dataset, seed=args.seed, shuffle=True)
-    print(len(retain_dataset))
-    assert len(forget_dataset) + len(retain_dataset) == len(trainloader.dataset)
-
     if args.wandb:
         logger = wandb.init(
             project="engram",
             config=vars(args),
-            group=f"finetuneRetrain_{args.dataset}_{args.model}_{args.opt}",
+            group=f"Retrain_{args.dataset}_{args.model}_{args.opt}",
         )
+
+    forget_loader, retain_loader = split_dataset_loader(
+        marked_loader, train_loader_full, args
+    )
+
+    # unlearn_data_loaders 구성: retain, forget, val, test
+    unlearn_data_loaders = OrderedDict(
+        retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
+    )
+
+    criterion = torch.nn.CrossEntropyLoss()
 
     model = create_model(
         args.model, pretrained=args.pretrained, num_classes=args.num_classes
@@ -99,32 +91,24 @@ def train(args):
     )
     criterion = torch.nn.CrossEntropyLoss()
 
-    if args.mixup:
-        mixup_fn = timm.data.Mixup(
-            mixup_alpha=0.2,
-            cutmix_alpha=1.0,
-            prob=1.0,
-            switch_prob=0.5,
-            mode="batch",
-            label_smoothing=0.1,
-            num_classes=args.num_classes,
-        )
-    else:
-        mixup_fn = None
+    parts = args.output.split("/")
+    idx = parts.index("finetuning")
+    parts[idx] = "retrain"
+    args.save_dir = "/".join(parts)
+    os.makedirs(args.save_dir, exist_ok=True)
 
-    os.makedirs(args.output, exist_ok=True)
-    best_acc = 0.0
+    start_unlearn = time.time()
 
     for epoch in range(args.epochs):
         train_loss, train_acc = train_epoch(
-            args, device, model, retain_loader, criterion, optimizer, mixup_fn
+            args, device, model, retain_loader, criterion, optimizer
         )
-        val_loss, val_acc = test_epoch(device, model, valloader, criterion)
+        val_loss, val_acc = test_epoch(device, model, val_loader, criterion)
         print(
             f"Epoch [{epoch+1:3}/{args.epochs}] | Loss: {train_loss:.4f}/{val_loss:.4f} | Acc: {train_acc:5.2f}/{val_acc:5.2f}% "
         )
 
-        test_loss, test_acc = test_epoch(device, model, testloader, criterion)
+        test_loss, test_acc = test_epoch(device, model, test_loader, criterion)
         print(f"Test Loss: {test_loss:.4f} | Test Acc: {test_acc:5.2f}%")
 
         if args.wandb:
@@ -140,40 +124,125 @@ def train(args):
                 }
             )
 
-        state = {
-            "epoch": epoch,
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "scheduler_state_dict": scheduler.state_dict(),
-            "train_loss": train_loss,
-            "train_acc": train_acc,
-            "val_loss": val_loss,
-            "val_acc": val_acc,
-            "test_loss": test_loss,
-            "test_acc": test_acc,
-            "args": vars(args),
-        }
-        is_best = val_acc > best_acc
-        if val_acc > best_acc:
-            best_acc = val_acc
-        save_checkpoint(state, is_best, args.output)
         scheduler.step(epoch)
+        break
+
+    end_rte = time.time()
+    print(f"Overall time (unlearning & preparation): {end_rte - start_rte:.3f}s")
+    print(f"Unlearning time: {end_rte - start_unlearn:.3f}s")
+    logger.log({"unlearn_time": end_rte - start_unlearn})
+    logger.log({"overall_time (unlearning & preparation)": end_rte - start_rte})
+    if not args.no_save:
+        save_unlearn_checkpoint(model, args)
+
+    # Accuracy 평가
+    print("-------------------Start accuracy evaluation-------------------")
+    evaluation_result = {}
+    if "new_accuracy" not in evaluation_result:
+        accuracy = {}
+        for name, loader in unlearn_data_loaders.items():
+            print("Evaluating on:", name)
+            dataset_convert_to_test(loader.dataset, test_loader.dataset)
+            _, val_acc = test_epoch(device, model, loader, criterion)
+            accuracy[name] = val_acc
+            print(f"{name} acc: {val_acc}")
+        logger.log(
+            {
+                "forget acc": accuracy["forget"],
+                "retain acc": accuracy["retain"],
+                "val acc": accuracy["val"],
+                "test acc": accuracy["test"],
+            }
+        )
+        evaluation_result["accuracy"] = accuracy
+
+    if not args.no_save:
+        save_evals(evaluation_result, args)
+
+    # MIA 평가 (forget efficacy)
+    print("-------------------Start MIA evaluation-------------------")
+    for deprecated in ["MIA", "SVC_MIA", "SVC_MIA_forget"]:
+        evaluation_result.pop(deprecated, None)
+    MIA_forget_efficacy = True
+    if MIA_forget_efficacy and "SVC_MIA_forget_efficacy" not in evaluation_result:
+        test_len = len(test_loader.dataset)
+        dataset_convert_to_test(retain_loader, test_loader.dataset)
+        dataset_convert_to_test(forget_loader, test_loader.dataset)
+        dataset_convert_to_test(test_loader, test_loader.dataset)
+        shadow_train = Subset(retain_loader.dataset, list(range(test_len)))
+        shadow_train_loader = DataLoader(
+            shadow_train, batch_size=args.batch_size, shuffle=False
+        )
+        evaluation_result["SVC_MIA_forget_efficacy"] = SVC_MIA(
+            shadow_train=shadow_train_loader,
+            shadow_test=test_loader,
+            target_train=None,
+            target_test=forget_loader,
+            model=model,
+        )
+        logger.log(
+            {"SVC_MIA_forget_efficacy": evaluation_result["SVC_MIA_forget_efficacy"]}
+        )
+
+    if not args.no_save:
+        save_evals(evaluation_result, args)
+
+    print("-------------------Start Linear Probing (LP) evaluation-------------------")
+    # Freeze all layers except the last one
+    for param in model.parameters():
+        param.requires_grad = False
+    model.head = torch.nn.Linear(model.head.in_features, args.num_classes).to(device)
+
+    # Train linear classifier with simple Adam optimizer
+    lp_optimizer = torch.optim.Adam(model.head.parameters(), lr=1e-4)
+    best_val_acc = 0
+    best_retain_acc = 0
+    best_forget_acc = 0
+
+    # Train for 3 epochs
+    for epoch in range(3):
+        train_loss, train_acc = train_epoch(
+            args, device, model, train_loader_full, criterion, lp_optimizer
+        )
+        _, val_acc = test_epoch(device, model, val_loader, criterion)
+
+        # Track best accuracy
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            _, retain_acc = test_epoch(device, model, retain_loader, criterion)
+            _, forget_acc = test_epoch(device, model, forget_loader, criterion)
+            best_retain_acc = retain_acc
+            best_forget_acc = forget_acc
+
+    print(
+        f"Linear Probing - Best Retain acc: {best_retain_acc:.2f}%, Best Forget acc: {best_forget_acc:.2f}%"
+    )
+    if args.wandb:
+        logger.log(
+            {
+                "LP retain acc": best_retain_acc,
+                "LP forget acc": best_forget_acc,
+            }
+        )
+
+    evaluation_result["LP accuracy"] = {
+        "LP retain acc": best_retain_acc,
+        "LP forget acc": best_forget_acc,
+    }
+
+    if not args.no_save:
+        save_evals(evaluation_result, args)
 
     if args.wandb:
         logger.finish()
 
 
-def train_epoch(args, device, model, trainloader, criterion, optimizer, mixup_fn):
+def train_epoch(args, device, model, trainloader, criterion, optimizer):
     model.train()
     running_loss, correct, total = 0.0, 0, 0
 
     for inputs, labels in trainloader:
         inputs, labels = inputs.to(device), labels.to(device)
-
-        # Apply MixUp
-        if args.mixup:
-            inputs, labels = mixup_fn(inputs, labels)
-
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, labels)
@@ -184,10 +253,7 @@ def train_epoch(args, device, model, trainloader, criterion, optimizer, mixup_fn
         running_loss += loss.item()
         _, predicted = outputs.max(1)
         total += labels.size(0)
-        if args.mixup:
-            correct += predicted.eq(labels.argmax(dim=1)).sum().item()
-        else:
-            correct += predicted.eq(labels).sum().item()
+        correct += predicted.eq(labels).sum().item()
 
     running_loss /= len(trainloader)
     accuracy = 100 * correct / total

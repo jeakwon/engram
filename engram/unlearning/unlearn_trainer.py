@@ -2,6 +2,8 @@ import yaml
 import argparse
 from engram.unlearning import retrain
 
+# from engram.unlearning import unlearn
+
 
 def parse_classes(s):
     """Function to parse a comma-separated string into a list of integers."""
@@ -20,12 +22,27 @@ def get_args():
 
     # Model settings
     parser.add_argument("--model", type=str, default="cifar_resnet18")
-    parser.add_argument("--model_path", type=str, default=None)
+    parser.add_argument("--model_load_path", type=str, default=None)
+    parser.add_argument("--imagenet_arch", action="store_true")
+    parser.add_argument(
+        "--pretrained",
+        action="store_true",
+        help="Use pretrained weights for the model.",
+    )
+    parser.add_argument(
+        "--save_dir",
+        help="The directory used to save the trained models",
+        default=None,
+        type=str,
+    )
 
     # Optimizer settings
     parser.add_argument("--opt", type=str, default="sgd")
     parser.add_argument("--lr", type=float, default=1e-5)
     parser.add_argument("--weight_decay", type=float, default=0)
+
+    # Unlearning hyperparameters
+    parser.add_argument("--alpha", type=float, default=0.2)
 
     # Scheduler settings
     parser.add_argument("--sched", type=str, default="cosine")
@@ -47,11 +64,17 @@ def get_args():
         default=[-1],
         help="Specific classes to forget (comma-separated, eg.'1,2,3'. If -1, no forgetting)",
     )
+    parser.add_argument(
+        "--no_save",
+        action="store_true",
+        help="If set, checkpoints will not be saved.",
+    )
 
     # Add the config argument
     parser.add_argument(
         "--config", type=str, default=None, help="Path to config file (YAML)"
     )
+    args = parser.parse_args()
 
     return args
 
@@ -79,3 +102,5 @@ if __name__ == "__main__":
 
     if args.unlearn == "retrain":
         retrain.train(args)
+    # else:
+    #     unlearn.train(args)

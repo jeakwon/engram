@@ -1,7 +1,11 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
-from imagenet import get_x_y_from_data_dict
+
+try:
+    from imagenet import get_x_y_from_data_dict
+except:
+    pass
 from sklearn.svm import SVC
 from sklearn.utils import shuffle
 
