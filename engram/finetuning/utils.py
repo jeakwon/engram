@@ -16,19 +16,27 @@ import wandb
 
 def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if args.dataset == "cifar10":
+        args.num_classes = 10
+    elif args.dataset == "cifar100":
+        args.num_classes = 100
+    model, data_config = create_model(
+        args.model, pretrained=args.pretrained, num_classes=args.num_classes
+    )
+    model.to(device)
     set_seed(args.seed)
     if args.dataset == "cifar10":
         trainloader, valloader, testloader = datasets.load_cifar10(
+            data_config,
             batch_size=args.batch_size,
             seed=args.seed,
         )
-        args.num_classes = 10
     elif args.dataset == "cifar100":
         trainloader, valloader, testloader = datasets.load_cifar100(
+            data_config,
             batch_size=args.batch_size,
             seed=args.seed,
         )
-        args.num_classes = 100
     else:
         raise ValueError("not supported")
 
@@ -39,9 +47,6 @@ def train(args):
             group=f"finetuning_{args.dataset}_{args.model}_{args.opt}",
         )
 
-    model = create_model(
-        args.model, pretrained=args.pretrained, num_classes=args.num_classes
-    ).to(device)
     optimizer = create_optimizer_v2(
         model, opt=args.opt, lr=args.lr, weight_decay=args.weight_decay
     )

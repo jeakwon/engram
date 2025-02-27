@@ -7,32 +7,40 @@ import numpy as np
 import copy
 
 
-def load_cifar10(batch_size=100, seed=1, class_to_replace=None, data_dir="./data", download=False):
+def load_cifar10(
+    data_config,
+    batch_size=100,
+    seed=1,
+    class_to_replace=None,
+    data_dir="./data",
+    download=False,
+):
+    img_size = data_config["input_size"][1]
     transform_train = transforms.Compose(
         [
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
-            transforms.Resize((224, 224)),
+            transforms.Resize((img_size, img_size)),
             transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
-            ),
+            transforms.Normalize(mean=data_config["mean"], std=data_config["std"]),
         ]
     )
 
     transform_test = transforms.Compose(
         [
-            transforms.Resize((224, 224)),
+            transforms.Resize((img_size, img_size)),
             transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
-            ),
+            transforms.Normalize(mean=data_config["mean"], std=data_config["std"]),
         ]
     )
 
-    train_set = CIFAR10(data_dir, train=True, transform=transform_train, download=download)
+    train_set = CIFAR10(
+        data_dir, train=True, transform=transform_train, download=download
+    )
     print("Total train set size:", len(train_set))
-    test_set = CIFAR10(data_dir, train=False, transform=transform_test, download=download)
+    test_set = CIFAR10(
+        data_dir, train=False, transform=transform_test, download=download
+    )
     print("Total test set size:", len(test_set))
 
     train_set.targets = np.array(train_set.targets)
@@ -99,16 +107,22 @@ def load_cifar10(batch_size=100, seed=1, class_to_replace=None, data_dir="./data
     return train_loader, val_loader, test_loader
 
 
-def load_cifar100(batch_size=100, seed=1, class_to_replace=None, data_dir="./data", download=False):
+def load_cifar100(
+    data_config,
+    batch_size=100,
+    seed=1,
+    class_to_replace=None,
+    data_dir="./data",
+    download=False,
+):
+    img_size = data_config["input_size"][1]
     transform_train = transforms.Compose(
         [
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
-            transforms.Resize((224, 224)),
+            transforms.Resize((img_size, img_size)),
             transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.5071, 0.4867, 0.4408], std=[0.2675, 0.2565, 0.2761]
-            ),
+            transforms.Normalize(mean=data_config["mean"], std=data_config["std"]),
         ]
     )
 
@@ -116,9 +130,7 @@ def load_cifar100(batch_size=100, seed=1, class_to_replace=None, data_dir="./dat
         [
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.5071, 0.4867, 0.4408], std=[0.2675, 0.2565, 0.2761]
-            ),
+            transforms.Normalize(mean=data_config["mean"], std=data_config["std"]),
         ]
     )
 
@@ -126,7 +138,9 @@ def load_cifar100(batch_size=100, seed=1, class_to_replace=None, data_dir="./dat
         data_dir, train=True, transform=transform_train, download=download
     )
     print("Total train set size:", len(train_set))
-    test_set = CIFAR100(data_dir, train=False, transform=transform_test, download=download)
+    test_set = CIFAR100(
+        data_dir, train=False, transform=transform_test, download=download
+    )
     print("Total test set size:", len(test_set))
 
     train_set.targets = np.array(train_set.targets)

@@ -33,12 +33,21 @@ def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     set_seed(args.seed)
 
+    model, data_config = create_model(
+        args.model, pretrained=False, num_classes=args.num_classes
+    )
+    model.to(device)
+    checkpoint = load_checkpoint(device, args.output)
+    model.load_state_dict(checkpoint["model_state_dict"])
+
     if args.dataset == "cifar10":
         train_loader_full, val_loader, _ = datasets.load_cifar10(
+            data_config,
             batch_size=args.batch_size,
             seed=args.seed,
         )
         marked_loader, _, test_loader = datasets.load_cifar10(
+            data_config,
             batch_size=args.batch_size,
             seed=args.seed,
             class_to_replace=args.class_to_replace,
@@ -46,10 +55,12 @@ def train(args):
         args.num_classes = 10
     elif args.dataset == "cifar100":
         train_loader_full, val_loader, _ = datasets.load_cifar100(
+            data_config,
             batch_size=args.batch_size,
             seed=args.seed,
         )
         marked_loader, _, test_loader = datasets.load_cifar100(
+            data_config,
             batch_size=args.batch_size,
             seed=args.seed,
             class_to_replace=args.class_to_replace,
@@ -73,14 +84,6 @@ def train(args):
     unlearn_data_loaders = OrderedDict(
         retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
     )
-
-    criterion = torch.nn.CrossEntropyLoss()
-
-    model = create_model(args.model, pretrained=False, num_classes=args.num_classes).to(
-        device
-    )
-    checkpoint = load_checkpoint(device, args.output)
-    model.load_state_dict(checkpoint["model_state_dict"])
 
     criterion = torch.nn.CrossEntropyLoss()
 
