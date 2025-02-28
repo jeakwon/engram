@@ -10,7 +10,7 @@ import copy
 from torch.utils.data import DataLoader
 
 
-def replace_loader_dataset(dataset, batch_size, seed=1, shuffle=True):
+def replace_loader_dataset(dataset, batch_size, seed=42, shuffle=True):
     def _init_fn(worker_id):
         np.random.seed(int(seed + worker_id))
         random.seed(int(seed + worker_id))

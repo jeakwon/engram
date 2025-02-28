@@ -10,7 +10,7 @@ import copy
 def load_cifar10(
     data_config,
     batch_size=100,
-    seed=1,
+    seed=42,
     class_to_replace=None,
     data_dir="./data",
     download=False,
@@ -110,7 +110,7 @@ def load_cifar10(
 def load_cifar100(
     data_config,
     batch_size=100,
-    seed=1,
+    seed=42,
     class_to_replace=None,
     data_dir="./data",
     download=False,
